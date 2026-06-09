@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kitchen Tamer">
+<title>040 — Kitchen Tamer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #1C2B1E; --bg-panel: #243227; --bg-card: #2C3D2F;
+    --cream: #F2EDE4; --cream-dim: #B8B0A4; --amber: #D4935A; --amber-dk: #B8743A;
+    --green-lt: #4A7A52; --green-dim: #35573C; --err: #C05050;
+    --font-disp: 'Playfair Display', Georgia, serif;
+    --font-mono: 'DM Mono', 'Courier New', monospace;
+  }
+  html { font-size: 16px; }
+  body { background: var(--bg); color: var(--cream); font-family: var(--font-mono); min-height: 100dvh; display: flex; flex-direction: column; font-weight: 300; }
+
+  /* NAV */
+  .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #111A12; border-bottom: 1px solid var(--green-dim); flex-shrink: 0; }
+  .nav-brand { font-family: var(--font-disp); font-size: 1.05rem; font-weight: 700; letter-spacing: .02em; color: var(--cream); text-decoration: none; }
+  .nav-brand span { color: var(--amber); }
+  .nav-right { display: flex; gap: 12px; align-items: center; }
+  .nav-link { font-size: .72rem; color: var(--cream-dim); text-decoration: none; letter-spacing: .06em; text-transform: uppercase; }
+  .nav-link:hover { color: var(--cream); }
+  .btn-gear { background: none; border: 1px solid var(--green-dim); color: var(--cream-dim); width: 32px; height: 32px; border-radius: 6px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: border-color .2s, color .2s; }
+  .btn-gear:hover { border-color: var(--amber); color: var(--amber); }
+
+  /* MAIN */
+  main { flex: 1; display: flex; flex-direction: column; padding: 28px 20px calc(40px + env(safe-area-inset-bottom)); max-width: 900px; width: 100%; margin: 0 auto; gap: 28px; }
+  .page-header { text-align: center; }
+  .page-title { font-family: var(--font-disp); font-size: clamp(2rem, 6vw, 3rem); font-weight: 900; line-height: 1; letter-spacing: -.01em; }
+  .page-title em { color: var(--amber); font-style: normal; }
+  .page-sub { font-size: .78rem; color: var(--cream-dim); margin-top: 8px; letter-spacing: .04em; }
+
+  /* PANELS */
+  .panels-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .panel { background: var(--bg-panel); border: 1px solid var(--green-dim); border-radius: 10px; padding: 14px 12px 12px; display: flex; flex-direction: column; gap: 10px; transition: border-color .2s; position: relative; }
+  .panel:hover { border-color: var(--green-lt); }
+  .panel.drag-over { border-color: var(--amber) !important; }
+  .panel.has-image { border-color: var(--green-lt); }
+  .panel-label { font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--cream-dim); display: flex; align-items: center; gap: 6px; }
+  .panel-label .multi-hint { font-size: .6rem; text-transform: none; letter-spacing: 0; color: var(--green-lt); }
+  .panel-drop-zone { flex: 1; min-height: 90px; border: 1px dashed var(--green-dim); border-radius: 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: .68rem; color: var(--cream-dim); letter-spacing: .03em; text-align: center; transition: background .2s; padding: 8px; position: relative; overflow: hidden; }
+  .panel.drag-over .panel-drop-zone { background: rgba(212,147,90,.1); border-color: var(--amber); }
+  .panel-drop-zone .drop-icon { font-size: 1.5rem; opacity: .5; }
+  .panel-drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .thumb-grid { display: none; flex-wrap: wrap; gap: 6px; padding: 2px 0; }
+  .panel.has-image .thumb-grid { display: flex; }
+  .panel.has-image .panel-drop-zone { display: none; }
+  .thumb-item { position: relative; width: 58px; height: 58px; border-radius: 5px; overflow: hidden; border: 1px solid var(--green-dim); flex-shrink: 0; }
+  .thumb-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb-item .rm-btn { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,.65); border: none; color: #fff; border-radius: 50%; width: 16px; height: 16px; font-size: .55rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .add-more-btn { background: var(--bg-card); border: 1px dashed var(--green-dim); color: var(--cream-dim); border-radius: 6px; padding: 0; font-family: var(--font-mono); font-size: .7rem; cursor: pointer; transition: border-color .15s, color .15s; display: none; align-items: center; justify-content: center; width: 58px; height: 58px; flex-shrink: 0; position: relative; overflow: hidden; }
+  .add-more-btn span { pointer-events: none; font-size: 1.2rem; line-height: 1; }
+  .add-more-btn input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .panel.has-image .add-more-btn { display: flex; }
+  .panel-clear-all { align-self: flex-end; background: none; border: none; color: var(--cream-dim); font-family: var(--font-mono); font-size: .65rem; cursor: pointer; padding: 0; display: none; letter-spacing: .04em; }
+  .panel-clear-all:hover { color: var(--err); }
+  .panel.has-image .panel-clear-all { display: block; }
+
+  /* OPTIONS */
+  .options-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+  .options-group { display: flex; flex-direction: column; gap: 6px; }
+  .options-label { font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--cream-dim); }
+  .days-picker { display: flex; gap: 6px; flex-wrap: wrap; }
+  .day-btn { background: var(--bg-card); border: 1px solid var(--green-dim); color: var(--cream-dim); padding: 6px 12px; border-radius: 6px; font-family: var(--font-mono); font-size: .75rem; cursor: pointer; transition: all .15s; font-weight: 400; }
+  .day-btn.active { background: var(--amber); border-color: var(--amber); color: #111; font-weight: 500; }
+  .restriction-note { font-size: .73rem; color: var(--cream-dim); background: var(--bg-card); border: 1px solid var(--green-dim); border-radius: 7px; padding: 8px 10px; line-height: 1.4; }
+
+  /* GENERATE */
+  .btn-generate { background: var(--amber); color: #111; border: none; border-radius: 8px; padding: 16px 24px; font-family: var(--font-disp); font-size: 1.05rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background .15s, transform .1s; width: 100%; letter-spacing: .01em; }
+  .btn-generate:hover { background: var(--amber-dk); }
+  .btn-generate:active { transform: scale(.98); }
+  .btn-generate:disabled { background: var(--green-dim); color: var(--cream-dim); cursor: not-allowed; transform: none; }
+  .spinner { width: 16px; height: 16px; border: 2px solid rgba(0,0,0,.2); border-top-color: #111; border-radius: 50%; animation: spin .7s linear infinite; display: none; }
+  .generating .spinner { display: block; }
+  .generating .btn-icon { display: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ERROR / SUCCESS */
+  .error-msg { background: rgba(192,80,80,.15); border: 1px solid var(--err); border-radius: 8px; padding: 12px 16px; font-size: .8rem; color: #F0A0A0; display: none; }
+  .error-msg.visible { display: block; }
+  .success-msg { background: rgba(74,122,82,.2); border: 1px solid var(--green-lt); border-radius: 8px; padding: 12px 16px; font-size: .8rem; color: #9DCC9D; display: none; }
+  .success-msg.visible { display: block; }
+
+  /* RESULTS */
+  .results-section { display: none; flex-direction: column; gap: 20px; animation: fadeUp .4s ease; }
+  .results-section.visible { display: flex; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+  .results-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .results-title { font-family: var(--font-disp); font-size: 1.35rem; font-weight: 700; }
+  .results-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-action { background: none; border: 1px solid var(--green-dim); color: var(--cream-dim); padding: 5px 12px; border-radius: 6px; font-family: var(--font-mono); font-size: .72rem; cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .btn-action:hover { border-color: var(--cream); color: var(--cream); }
+  .btn-action:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-action.primary { background: var(--amber); border-color: var(--amber); color: #111; font-weight: 500; }
+  .btn-action.primary:hover { background: var(--amber-dk); border-color: var(--amber-dk); }
+  .results-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  .result-card { background: var(--bg-panel); border: 1px solid var(--green-dim); border-radius: 10px; overflow: hidden; }
+  .result-card-head { background: var(--bg-card); padding: 10px 14px; font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--amber); border-bottom: 1px solid var(--green-dim); display: flex; align-items: center; gap: 6px; }
+  .result-card-body { padding: 14px; font-size: .8rem; line-height: 1.7; color: var(--cream); }
+  .result-card-body h3 { font-family: var(--font-disp); font-size: .95rem; font-weight: 700; color: var(--amber); margin: 12px 0 4px; }
+  .result-card-body h3:first-child { margin-top: 0; }
+  .result-card-body p { margin-bottom: 6px; }
+  .result-card-body ul { padding-left: 16px; }
+  .result-card-body li { margin-bottom: 3px; }
+
+  /* SETTINGS MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--bg-panel); border: 1px solid var(--green-lt); border-radius: 12px; padding: 28px 24px; width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 18px; max-height: 90dvh; overflow-y: auto; }
+  .modal-head { display: flex; justify-content: space-between; align-items: center; }
+  .modal-title { font-family: var(--font-disp); font-size: 1.3rem; font-weight: 700; }
+  .btn-modal-close { background: none; border: none; color: var(--cream-dim); font-size: 1.2rem; cursor: pointer; padding: 2px 6px; }
+  .btn-modal-close:hover { color: var(--cream); }
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+  .field-label { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--cream-dim); }
+  .field-label .hint { font-size: .68rem; text-transform: none; letter-spacing: 0; color: var(--green-lt); margin-left: 6px; }
+  .field-divider { border: none; border-top: 1px solid var(--green-dim); margin: 2px 0; }
+  .field-section-label { font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; color: var(--green-lt); }
+  input[type="password"], input[type="text"], input[type="email"], textarea { background: var(--bg-card); border: 1px solid var(--green-dim); border-radius: 7px; color: var(--cream); font-family: var(--font-mono); font-size: .82rem; padding: 10px 12px; width: 100%; outline: none; transition: border-color .15s; -webkit-appearance: none; }
+  input[type="password"]:focus, input[type="text"]:focus, input[type="email"]:focus, textarea:focus { border-color: var(--amber); }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+  .gas-status { font-size: .7rem; color: var(--cream-dim); padding: 6px 10px; background: var(--bg-card); border-radius: 6px; border: 1px solid var(--green-dim); display: flex; align-items: center; gap: 6px; }
+  .gas-status.ok { border-color: var(--green-lt); color: #9DCC9D; }
+  .gas-status.err { border-color: var(--err); color: #F0A0A0; }
+  .btn-save { background: var(--amber); color: #111; border: none; border-radius: 8px; padding: 12px 20px; font-family: var(--font-disp); font-size: .95rem; font-weight: 700; cursor: pointer; transition: background .15s; width: 100%; }
+  .btn-save:hover { background: var(--amber-dk); }
+  .saved-badge { text-align: center; font-size: .75rem; color: var(--green-lt); display: none; }
+  .saved-badge.show { display: block; }
+
+  /* RESPONSIVE */
+  @media (max-width: 640px) { .panels-row { grid-template-columns: 1fr; } .options-row { grid-template-columns: 1fr; } .results-cols { grid-template-columns: 1fr; } }
+  @media (min-width: 641px) and (max-width: 780px) { .panels-row { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<nav class="nav-bar">
+  <a class="nav-brand" href="https://augustineiacopelli.github.io/appaday/">App<span>A</span>Day</a>
+  <div class="nav-right">
+    <a class="nav-link" href="https://augustineiacopelli.github.io/appaday/">&larr; Portfolio</a>
+    <button class="btn-gear" id="openSettings" title="Settings">&#9881;</button>
+  </div>
+</nav>
+
+<main>
+  <header class="page-header">
+    <h1 class="page-title">Kitchen <em>Tamer</em></h1>
+    <p class="page-sub">Photograph what you have. Get a week of meals and a shopping list.</p>
+  </header>
+
+  <section class="panels-row">
+    <div class="panel" id="panel-fridge" ondragover="onDragOver(event,'fridge')" ondragleave="onDragLeave(event,'fridge')" ondrop="onDrop(event,'fridge')">
+      <div class="panel-label"><span>&#10052;</span> Refrigerator <span class="multi-hint">multiple OK</span></div>
+      <div class="panel-drop-zone"><span class="drop-icon">&#128247;</span><span>Tap or drop photos</span><input type="file" accept="image/*" multiple onchange="onFileInput(event,'fridge')"></div>
+      <div class="thumb-grid" id="tg-fridge"></div>
+      <button class="add-more-btn" title="Add more"><span>+</span><input type="file" accept="image/*" multiple onchange="onFileInput(event,'fridge')"></button>
+      <button class="panel-clear-all" onclick="clearZone('fridge')">clear all</button>
+    </div>
+    <div class="panel" id="panel-freezer" ondragover="onDragOver(event,'freezer')" ondragleave="onDragLeave(event,'freezer')" ondrop="onDrop(event,'freezer')">
+      <div class="panel-label"><span>&#10052;&#10052;</span> Freezer <span class="multi-hint">multiple OK</span></div>
+      <div class="panel-drop-zone"><span class="drop-icon">&#128247;</span><span>Tap or drop photos</span><input type="file" accept="image/*" multiple onchange="onFileInput(event,'freezer')"></div>
+      <div class="thumb-grid" id="tg-freezer"></div>
+      <button class="add-more-btn" title="Add more"><span>+</span><input type="file" accept="image/*" multiple onchange="onFileInput(event,'freezer')"></button>
+      <button class="panel-clear-all" onclick="clearZone('freezer')">clear all</button>
+    </div>
+    <div class="panel" id="panel-pantry" ondragover="onDragOver(event,'pantry')" ondragleave="onDragLeave(event,'pantry')" ondrop="onDrop(event,'pantry')">
+      <div class="panel-label"><span>&#127968;</span> Pantry <span class="multi-hint">multiple OK</span></div>
+      <div class="panel-drop-zone"><span class="drop-icon">&#128247;</span><span>Tap or drop photos</span><input type="file" accept="image/*" multiple onchange="onFileInput(event,'pantry')"></div>
+      <div class="thumb-grid" id="tg-pantry"></div>
+      <button class="add-more-btn" title="Add more"><span>+</span><input type="file" accept="image/*" multiple onchange="onFileInput(event,'pantry')"></button>
+      <button class="panel-clear-all" onclick="clearZone('pantry')">clear all</button>
+    </div>
+  </section>
+
+  <section class="options-row">
+    <div class="options-group">
+      <div class="options-label">Days to plan</div>
+      <div class="days-picker">
+        <button class="day-btn" data-days="3" onclick="setDays(3)">3 days</button>
+        <button class="day-btn active" data-days="5" onclick="setDays(5)">5 days</button>
+        <button class="day-btn" data-days="7" onclick="setDays(7)">7 days</button>
+      </div>
+    </div>
+    <div class="options-group">
+      <div class="options-label">Dietary restrictions</div>
+      <div class="restriction-note"><span id="restrictionText">None saved &mdash; add in &#9881; Settings</span></div>
+    </div>
+  </section>
+
+  <button class="btn-generate" id="generateBtn" onclick="generatePlan()">
+    <span class="btn-icon">&#127859;</span>
+    <div class="spinner"></div>
+    <span class="btn-label">Generate My Meal Plan</span>
+  </button>
+
+  <div class="error-msg" id="errorMsg"></div>
+  <div class="success-msg" id="successMsg"></div>
+
+  <section class="results-section" id="resultsSection">
+    <div class="results-header">
+      <h2 class="results-title">Your Plan</h2>
+      <div class="results-actions">
+        <button class="btn-action primary" id="emailBtn" onclick="emailPlan()">&#9993; Email Plan</button>
+        <button class="btn-action" onclick="printPlan()">&#128438; Print / PDF</button>
+        <button class="btn-action" onclick="resetResults()">Start over</button>
+      </div>
+    </div>
+    <div class="results-cols">
+      <div class="result-card">
+        <div class="result-card-head">&#128197; Meal Plan</div>
+        <div class="result-card-body" id="menuOutput"></div>
+      </div>
+      <div class="result-card">
+        <div class="result-card-head">&#128722; Shopping List</div>
+        <div class="result-card-body" id="shoppingOutput"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 class="modal-title">Settings</h2>
+      <button class="btn-modal-close" onclick="closeSettings()">&#10005;</button>
+    </div>
+
+    <div class="field-section-label">Claude</div>
+    <div class="field-group">
+      <label class="field-label" for="apiKeyInput">API Key <span class="hint">Stored only on this device</span></label>
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+    </div>
+
+    <hr class="field-divider">
+    <div class="field-section-label">Email via Google Apps Script</div>
+
+    <div class="field-group">
+      <label class="field-label" for="gasUrlInput">GAS Web App URL <span class="hint">From your deployed script</span></label>
+      <input type="text" id="gasUrlInput" placeholder="https://script.google.com/macros/s/.../exec" spellcheck="false">
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="emailToInput">Send to <span class="hint">Email address</span></label>
+      <input type="email" id="emailToInput" placeholder="you@example.com">
+    </div>
+    <div id="gasStatusEl" class="gas-status" style="display:none"></div>
+
+    <hr class="field-divider">
+    <div class="field-section-label">Preferences</div>
+    <div class="field-group">
+      <label class="field-label" for="restrictionsInput">Dietary Restrictions &amp; Preferences</label>
+      <textarea id="restrictionsInput" placeholder="e.g. gluten-free, no shellfish, vegetarian..."></textarea>
+    </div>
+
+    <button class="btn-save" onclick="saveSettings()">Save Settings</button>
+    <div class="saved-badge" id="savedBadge">&#10003; Saved to this device</div>
+  </div>
+</div>
+<script>
+var zones = { fridge: [], freezer: [], pantry: [] };
+var selectedDays = 5;
+
+// DRAG & DROP
+function onDragOver(e, zone) { e.preventDefault(); document.getElementById('panel-' + zone).classList.add('drag-over'); }
+function onDragLeave(e, zone) { document.getElementById('panel-' + zone).classList.remove('drag-over'); }
+function onDrop(e, zone) {
+  e.preventDefault();
+  document.getElementById('panel-' + zone).classList.remove('drag-over');
+  Array.from(e.dataTransfer.files).filter(function(f) { return f.type.startsWith('image/'); }).forEach(function(f) { readFile(f, zone); });
+}
+
+// FILE INPUT
+function onFileInput(e, zone) {
+  Array.from(e.target.files).forEach(function(f) { readFile(f, zone); });
+  e.target.value = '';
+}
+function readFile(file, zone) {
+  var reader = new FileReader();
+  reader.onload = function(ev) { zones[zone].push(ev.target.result); renderThumbs(zone); };
+  reader.readAsDataURL(file);
+}
+function renderThumbs(zone) {
+  var grid = document.getElementById('tg-' + zone);
+  var panel = document.getElementById('panel-' + zone);
+  var imgs = zones[zone];
+  grid.innerHTML = '';
+  imgs.forEach(function(src, i) {
+    var wrap = document.createElement('div'); wrap.className = 'thumb-item';
+    var img = document.createElement('img'); img.src = src; img.alt = '';
+    var rm = document.createElement('button'); rm.className = 'rm-btn'; rm.innerHTML = '&#10005;';
+    rm.onclick = (function(idx) { return function(ev) { ev.stopPropagation(); zones[zone].splice(idx, 1); renderThumbs(zone); }; })(i);
+    wrap.appendChild(img); wrap.appendChild(rm); grid.appendChild(wrap);
+  });
+  panel.classList.toggle('has-image', imgs.length > 0);
+}
+function clearZone(zone) { zones[zone] = []; renderThumbs(zone); }
+
+// DAYS
+function setDays(n) {
+  selectedDays = n;
+  document.querySelectorAll('.day-btn').forEach(function(b) { b.classList.toggle('active', parseInt(b.dataset.days) === n); });
+}
+
+// SETTINGS
+function openSettings() {
+  document.getElementById('apiKeyInput').value = localStorage.getItem('kt_api_key') || '';
+  document.getElementById('gasUrlInput').value = localStorage.getItem('kt_gas_url') || '';
+  document.getElementById('emailToInput').value = localStorage.getItem('kt_email_to') || '';
+  document.getElementById('restrictionsInput').value = localStorage.getItem('kt_restrictions') || '';
+  document.getElementById('settingsModal').classList.add('open');
+  document.getElementById('savedBadge').classList.remove('show');
+  document.getElementById('gasStatusEl').style.display = 'none';
+}
+function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
+function saveSettings() {
+  var key = document.getElementById('apiKeyInput').value.trim();
+  var gasUrl = document.getElementById('gasUrlInput').value.trim();
+  var emailTo = document.getElementById('emailToInput').value.trim();
+  var rest = document.getElementById('restrictionsInput').value.trim();
+  if (key) { localStorage.setItem('kt_api_key', key); } else { localStorage.removeItem('kt_api_key'); }
+  if (gasUrl) { localStorage.setItem('kt_gas_url', gasUrl); } else { localStorage.removeItem('kt_gas_url'); }
+  if (emailTo) { localStorage.setItem('kt_email_to', emailTo); } else { localStorage.removeItem('kt_email_to'); }
+  if (rest) { localStorage.setItem('kt_restrictions', rest); } else { localStorage.removeItem('kt_restrictions'); }
+  document.getElementById('savedBadge').classList.add('show');
+  updateRestrictionDisplay();
+  setTimeout(closeSettings, 900);
+}
+function updateRestrictionDisplay() {
+  var rest = localStorage.getItem('kt_restrictions') || '';
+  var el = document.getElementById('restrictionText');
+  if (rest) { el.textContent = rest; } else { el.innerHTML = 'None saved &mdash; add in &#9881; Settings'; }
+}
+document.getElementById('openSettings').addEventListener('click', openSettings);
+document.getElementById('settingsModal').addEventListener('click', function(e) { if (e.target === this) closeSettings(); });
+
+// UTILS
+function b64(dataURL) { return dataURL.split(',')[1]; }
+function mime(dataURL) { return dataURL.split(';')[0].split(':')[1]; }
+
+// GENERATE
+async function generatePlan() {
+  var apiKey = localStorage.getItem('kt_api_key');
+  if (!apiKey) { showError('Add your Claude API key in \u2699 Settings first.'); return; }
+  var totalImages = zones.fridge.length + zones.freezer.length + zones.pantry.length;
+  if (!totalImages) { showError('Add at least one photo of your fridge, freezer, or pantry to continue.'); return; }
+
+  hideMessages();
+  setGenerating(true);
+  document.getElementById('resultsSection').classList.remove('visible');
+
+  var restrictions = localStorage.getItem('kt_restrictions') || '';
+  var content = [];
+  var labels = { fridge: 'Refrigerator', freezer: 'Freezer', pantry: 'Pantry' };
+
+  ['fridge', 'freezer', 'pantry'].forEach(function(zone) {
+    zones[zone].forEach(function(src, i) {
+      content.push({ type: 'image', source: { type: 'base64', media_type: mime(src), data: b64(src) } });
+      var suffix = zones[zone].length > 1 ? ' (photo ' + (i + 1) + ' of ' + zones[zone].length + ')' : '';
+      content.push({ type: 'text', text: 'The image above is my ' + labels[zone] + suffix + '.' });
+    });
+  });
+
+  var restrictionLine = restrictions
+    ? 'Dietary restrictions and preferences: ' + restrictions + '\n\n'
+    : 'No special dietary restrictions.\n\n';
+
+  var prompt = restrictionLine
+    + 'Based on the ingredient photos provided, create a realistic ' + selectedDays + '-day meal plan '
+    + '(breakfast, lunch, and dinner each day) that uses primarily what I already have. '
+    + 'Then generate a concise shopping list of ONLY the missing ingredients needed.\n\n'
+    + 'MEAL_PLAN_START\n'
+    + 'For each day use:\n### Day 1\nBreakfast: [meal]\nLunch: [meal]\nDinner: [meal]\n'
+    + '(continue for all ' + selectedDays + ' days)\n'
+    + 'MEAL_PLAN_END\n\n'
+    + 'SHOPPING_LIST_START\n'
+    + 'List missing ingredients one per line grouped by category (Produce, Dairy, Meat, Pantry, etc.).\n'
+    + 'If nothing is missing write: Your pantry is fully stocked for this plan!\n'
+    + 'SHOPPING_LIST_END';
+
+  content.push({ type: 'text', text: prompt });
+
+  try {
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, messages: [{ role: 'user', content: content }] })
+    });
+    if (!res.ok) { var e = await res.json().catch(function() { return {}; }); throw new Error(e.error ? e.error.message : 'API error ' + res.status); }
+    var data = await res.json();
+    var text = data.content.map(function(b) { return b.type === 'text' ? b.text : ''; }).join('');
+
+    var menuMatch = text.match(/MEAL_PLAN_START\s*([\s\S]*?)\s*MEAL_PLAN_END/);
+    var shopMatch = text.match(/SHOPPING_LIST_START\s*([\s\S]*?)\s*SHOPPING_LIST_END/);
+    var menuRaw = menuMatch ? menuMatch[1].trim() : text;
+    var shopRaw = shopMatch ? shopMatch[1].trim() : 'See meal plan.';
+
+    document.getElementById('menuOutput').innerHTML = fmtMenu(menuRaw);
+    document.getElementById('shoppingOutput').innerHTML = fmtShopping(shopRaw);
+    document.getElementById('resultsSection').classList.add('visible');
+  } catch(err) {
+    showError('Something went wrong: ' + err.message);
+  } finally {
+    setGenerating(false);
+  }
+}
+
+// FORMAT
+function fmtMenu(raw) {
+  return raw
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^(Breakfast|Lunch|Dinner):(.+)$/gm, '<p><strong>$1:</strong>$2</p>')
+    .replace(/\n{2,}/g, '\n');
+}
+function fmtShopping(raw) {
+  var lines = raw.split('\n').filter(function(l) { return l.trim(); });
+  var html = ''; var inList = false;
+  lines.forEach(function(line) {
+    var t = line.trim();
+    if (/^(\*\*)?[A-Z][A-Za-z &]+:?(\*\*)?$/.test(t)) {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += '<h3>' + t.replace(/\*\*/g, '').replace(/:$/, '') + '</h3><ul>'; inList = true;
+    } else if (/^[-\u2022*]/.test(t)) {
+      if (!inList) { html += '<ul>'; inList = true; }
+      html += '<li>' + t.replace(/^[-\u2022*]\s*/, '') + '</li>';
+    } else if (t) {
+      if (!inList) { html += '<ul>'; inList = true; }
+      html += '<li>' + t + '</li>';
+    }
+  });
+  if (inList) html += '</ul>';
+  return html || '<p>' + raw + '</p>';
+}
+
+// BUILD PLAIN-TEXT VERSION for email body
+function buildPlainText() {
+  var menu = document.getElementById('menuOutput');
+  var shop = document.getElementById('shoppingOutput');
+  function nodeToText(node) {
+    if (node.nodeType === 3) return node.textContent;
+    var tag = node.tagName ? node.tagName.toLowerCase() : '';
+    var inner = Array.from(node.childNodes).map(nodeToText).join('');
+    if (tag === 'h3') return '\n' + inner.toUpperCase() + '\n';
+    if (tag === 'li') return '  - ' + inner + '\n';
+    if (tag === 'p') return inner + '\n';
+    if (tag === 'ul') return inner;
+    return inner;
+  }
+  var menuText = nodeToText(menu).trim();
+  var shopText = nodeToText(shop).trim();
+  return 'MEAL PLAN\n' + '='.repeat(40) + '\n' + menuText + '\n\n'
+       + 'SHOPPING LIST\n' + '='.repeat(40) + '\n' + shopText;
+}
+
+// BUILD HTML EMAIL BODY
+function buildEmailHTML() {
+  var menuHTML = document.getElementById('menuOutput').innerHTML;
+  var shopHTML = document.getElementById('shoppingOutput').innerHTML;
+  var restrictions = localStorage.getItem('kt_restrictions') || '';
+  var dateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  var metaLine = selectedDays + '-Day Meal Plan &mdash; Generated ' + dateStr;
+  if (restrictions) { metaLine += ' &mdash; ' + restrictions.replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    + '<style>'
+    + 'body{font-family:Georgia,serif;font-size:14px;color:#1a1a1a;max-width:700px;margin:0 auto;padding:24px}'
+    + 'h1{font-size:28px;font-weight:900;color:#1C2B1E;margin:0 0 4px}'
+    + 'h1 em{color:#D4935A;font-style:normal}'
+    + '.meta{font-size:11px;color:#666;margin-bottom:20px}'
+    + 'hr{border:none;border-top:2px solid #1C2B1E;margin:16px 0}'
+    + '.cols{display:grid;grid-template-columns:1fr 1fr;gap:24px}'
+    + '.col-head{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#D4935A;border-bottom:1px solid #D4935A;padding-bottom:4px;margin-bottom:10px}'
+    + 'h3{font-family:Georgia,serif;font-size:13px;font-weight:700;color:#1C2B1E;margin:10px 0 3px}'
+    + 'p{margin:0 0 4px;font-size:12px;line-height:1.5}'
+    + 'ul{padding-left:16px;margin:0 0 4px}'
+    + 'li{font-size:12px;line-height:1.6;margin-bottom:1px}'
+    + '.footer{margin-top:24px;font-size:10px;color:#999;border-top:1px solid #ccc;padding-top:8px}'
+    + '</style></head><body>'
+    + '<h1>Kitchen <em>Tamer</em></h1>'
+    + '<div class="meta">' + metaLine + '</div>'
+    + '<hr>'
+    + '<div class="cols">'
+    + '<div><div class="col-head">Meal Plan</div>' + menuHTML + '</div>'
+    + '<div><div class="col-head">Shopping List</div>' + shopHTML + '</div>'
+    + '</div>'
+    + '<div class="footer">Kitchen Tamer &mdash; AppADay #040 &mdash; augustineiacopelli.github.io/appaday</div>'
+    + '</body></html>';
+}
+
+// EMAIL VIA GAS
+async function emailPlan() {
+  var gasUrl = localStorage.getItem('kt_gas_url');
+  var emailTo = localStorage.getItem('kt_email_to');
+  if (!gasUrl) { showError('Add your GAS Web App URL in \u2699 Settings to use email.'); return; }
+  if (!emailTo) { showError('Add a destination email address in \u2699 Settings.'); return; }
+
+  hideMessages();
+  var btn = document.getElementById('emailBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending\u2026';
+
+  var dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  var subject = 'Kitchen Tamer: ' + selectedDays + '-Day Meal Plan (' + dateStr + ')';
+
+  try {
+    var res = await fetch(gasUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: emailTo,
+        subject: subject,
+        htmlBody: buildEmailHTML(),
+        plainBody: buildPlainText()
+      })
+    });
+    var result = await res.json();
+    if (result.status === 'ok') {
+      showSuccess('Plan sent to ' + emailTo);
+    } else {
+      showError('GAS error: ' + (result.message || 'Unknown error'));
+    }
+  } catch(err) {
+    showError('Could not reach the email endpoint. Check your GAS URL in Settings.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '&#9993; Email Plan';
+  }
+}
+
+// PRINT / PDF FALLBACK
+function printPlan() {
+  var menuHTML = document.getElementById('menuOutput').innerHTML;
+  var shopHTML = document.getElementById('shoppingOutput').innerHTML;
+  var restrictions = localStorage.getItem('kt_restrictions') || '';
+  var dateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  var metaLine = selectedDays + '-Day Meal Plan<br>Generated ' + dateStr;
+  if (restrictions) { metaLine += '<br>Dietary notes: ' + restrictions.replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  var printStyles = [
+    "@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@300;400;500&display=swap');",
+    '*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }',
+    "body { font-family: 'DM Mono', 'Courier New', monospace; font-size: 11pt; color: #1a1a1a; background: #fff; font-weight: 300; }",
+    '.page { max-width: 800px; margin: 0 auto; padding: 36pt 36pt 48pt; }',
+    '.print-header { border-bottom: 2pt solid #1C2B1E; padding-bottom: 12pt; margin-bottom: 20pt; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 8pt; }',
+    "h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 26pt; font-weight: 900; color: #1C2B1E; line-height: 1; }",
+    'h1 em { color: #D4935A; font-style: normal; }',
+    '.print-meta { font-size: 8pt; color: #666; text-align: right; line-height: 1.6; }',
+    '.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24pt; }',
+    '.col-head { font-size: 7pt; letter-spacing: .12em; text-transform: uppercase; color: #D4935A; border-bottom: 1pt solid #D4935A; padding-bottom: 5pt; margin-bottom: 10pt; font-weight: 500; }',
+    "h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 11pt; font-weight: 700; color: #1C2B1E; margin: 10pt 0 3pt; }",
+    'h3:first-child { margin-top: 0; }',
+    'p { margin-bottom: 4pt; font-size: 9.5pt; line-height: 1.5; }',
+    'ul { padding-left: 14pt; margin-bottom: 4pt; }',
+    'li { font-size: 9.5pt; line-height: 1.6; margin-bottom: 1pt; }',
+    'strong { font-weight: 500; }',
+    '.print-footer { margin-top: 28pt; border-top: .5pt solid #ccc; padding-top: 8pt; font-size: 7.5pt; color: #999; display: flex; justify-content: space-between; }',
+    '@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .page { padding: 24pt 28pt 36pt; max-width: 100%; } }'
+  ].join('\n');
+
+  var printHTML = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
+    + '<title>Kitchen Tamer \u2014 ' + selectedDays + '-Day Meal Plan</title>'
+    + '<style>' + printStyles + '</style></head><body>'
+    + '<div class="page">'
+    + '<div class="print-header"><h1>Kitchen <em>Tamer</em></h1><div class="print-meta">' + metaLine + '</div></div>'
+    + '<div class="cols">'
+    + '<div><div class="col-head">&#128197; Meal Plan</div>' + menuHTML + '</div>'
+    + '<div><div class="col-head">&#128722; Shopping List</div>' + shopHTML + '</div>'
+    + '</div>'
+    + '<div class="print-footer"><span>Kitchen Tamer \u2014 AppADay #040</span><span>augustineiacopelli.github.io/appaday</span></div>'
+    + '</div></body></html>';
+
+  var win = window.open('', '_blank');
+  if (win) {
+    win.document.write(printHTML);
+    win.document.close();
+    win.onload = function() { win.print(); };
+  } else {
+    showError('Pop-up blocked. Allow pop-ups for this site, or use the Email button instead.');
+  }
+}
+
+// HELPERS
+function setGenerating(on) {
+  var btn = document.getElementById('generateBtn');
+  btn.disabled = on; btn.classList.toggle('generating', on);
+  btn.querySelector('.btn-label').textContent = on ? 'Analyzing your kitchen\u2026' : 'Generate My Meal Plan';
+}
+function showError(msg) { var el = document.getElementById('errorMsg'); el.textContent = msg; el.classList.add('visible'); }
+function showSuccess(msg) { var el = document.getElementById('successMsg'); el.textContent = msg; el.classList.add('visible'); }
+function hideMessages() {
+  document.getElementById('errorMsg').classList.remove('visible');
+  document.getElementById('successMsg').classList.remove('visible');
+}
+function resetResults() {
+  document.getElementById('resultsSection').classList.remove('visible');
+  hideMessages();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+updateRestrictionDisplay();
+</script>
+</body>
+</html>
