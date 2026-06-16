@@ -284,7 +284,24 @@ function onFileInput(e, zone) {
 }
 function readFile(file, zone) {
   var reader = new FileReader();
-  reader.onload = function(ev) { zones[zone].push(ev.target.result); renderThumbs(zone); };
+  reader.onload = function(ev) {
+    var img = new Image();
+    img.onload = function() {
+      var MAX = 1024;
+      var w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      var dataURL = canvas.toDataURL('image/jpeg', 0.82);
+      zones[zone].push(dataURL);
+      renderThumbs(zone);
+    };
+    img.src = ev.target.result;
+  };
   reader.readAsDataURL(file);
 }
 function renderThumbs(zone) {
@@ -396,7 +413,7 @@ async function generatePlan() {
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true'
       },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 4096, messages: [{ role: 'user', content: content }] })
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, messages: [{ role: 'user', content: content }] })
     });
     if (!res.ok) { var e = await res.json().catch(function() { return {}; }); throw new Error(e.error ? e.error.message : 'API error ' + res.status); }
     var data = await res.json();
@@ -411,7 +428,12 @@ async function generatePlan() {
     document.getElementById('shoppingOutput').innerHTML = fmtShopping(shopRaw);
     document.getElementById('resultsSection').classList.add('visible');
   } catch(err) {
-    showError('Something went wrong: ' + err.message);
+    var msg = err.message || '';
+    if (msg === 'Load failed' || msg === 'Failed to fetch' || msg === 'NetworkError') {
+      showError('Network error — the request was too large or was blocked. Try reducing the number of photos and generate again.');
+    } else {
+      showError('Something went wrong: ' + msg);
+    }
   } finally {
     setGenerating(false);
   }
