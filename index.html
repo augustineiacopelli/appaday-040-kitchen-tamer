@@ -589,19 +589,26 @@ function printPlan() {
     'li { font-size: 9.5pt; line-height: 1.6; margin-bottom: 1pt; }',
     'strong { font-weight: 500; }',
     '.print-footer { margin-top: 28pt; border-top: .5pt solid #ccc; padding-top: 8pt; font-size: 7.5pt; color: #999; display: flex; justify-content: space-between; }',
-    '@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .page { padding: 24pt 28pt 36pt; max-width: 100%; } }'
+    '@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .page { padding: 24pt 28pt 36pt; max-width: 100%; } .back-bar { display: none !important; } }',
+    '.back-bar { background: #1C2B1E; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; position: sticky; top: 0; z-index: 10; }',
+    ".back-btn { background: none; border: 1px solid #4A7A52; color: #F2EDE4; font-family: 'DM Mono', monospace; font-size: 13px; padding: 8px 14px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; }",
+    ".print-btn { background: #D4935A; border: none; color: #111; font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; padding: 8px 16px; border-radius: 6px; cursor: pointer; }"
   ].join('\n');
 
   var printHTML = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
-    + '<title>Kitchen Tamer \u2014 ' + selectedDays + '-Day Meal Plan</title>'
+    + '<title>Kitchen Tamer — ' + selectedDays + '-Day Meal Plan</title>'
     + '<style>' + printStyles + '</style></head><body>'
+    + '<div class="back-bar">'
+    + '<button class="back-btn" onclick="window.close()">&#8592; Back to Kitchen Tamer</button>'
+    + '<button class="print-btn" onclick="window.print()">&#128438; Print / Save PDF</button>'
+    + '</div>'
     + '<div class="page">'
     + '<div class="print-header"><h1>Kitchen <em>Tamer</em></h1><div class="print-meta">' + metaLine + '</div></div>'
     + '<div class="cols">'
     + '<div><div class="col-head">&#128197; Meal Plan</div>' + menuHTML + '</div>'
     + '<div><div class="col-head">&#128722; Shopping List</div>' + shopHTML + '</div>'
     + '</div>'
-    + '<div class="print-footer"><span>Kitchen Tamer \u2014 AppADay #040</span><span>augustineiacopelli.github.io/appaday</span></div>'
+    + '<div class="print-footer"><span>Kitchen Tamer — AppADay #040</span><span>augustineiacopelli.github.io/appaday</span></div>'
     + '</div></body></html>';
 
   var win = window.open('', '_blank');
