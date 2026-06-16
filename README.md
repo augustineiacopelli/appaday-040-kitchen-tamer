@@ -154,6 +154,14 @@ Single-file vanilla HTML/CSS/JS. No frameworks, no build step, no external depen
 
 ---
 
+## Future Updates
+
+- Make plan range more customizable
+- Separate reports for meal plan from shopping list
+- Make easier to use than requiring GAS URL to send emails
+
+---
+
 ## Part of AppADay
 
 This is app #040 in the [AppADay](https://augustineiacopelli.github.io/appaday/) project — one complete, functional, mobile-friendly web app built and shipped every day.
