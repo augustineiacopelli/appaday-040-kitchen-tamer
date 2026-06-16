@@ -396,7 +396,7 @@ async function generatePlan() {
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true'
       },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, messages: [{ role: 'user', content: content }] })
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 4096, messages: [{ role: 'user', content: content }] })
     });
     if (!res.ok) { var e = await res.json().catch(function() { return {}; }); throw new Error(e.error ? e.error.message : 'API error ' + res.status); }
     var data = await res.json();
