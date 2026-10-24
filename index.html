@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="https://augustineiacopelli.github.io/appaday/manifests/040.webmanifest">
 <script src="https://augustineiacopelli.github.io/appaday/save.js" defer></script>
+<script src="https://augustineiacopelli.github.io/appaday/keys.js" data-app="040" data-legacy-key="kt_api_key" data-accent="#289664" defer></script>
 <meta name="apple-mobile-web-app-title" content="Kitchen Tamer">
 <link rel="apple-touch-icon" href="https://augustineiacopelli.github.io/appaday/icons/040.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -239,10 +240,7 @@
     </div>
 
     <div class="field-section-label">Claude</div>
-    <div class="field-group">
-      <label class="field-label" for="apiKeyInput">API Key <span class="hint">Stored only on this device</span></label>
-      <input type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
-    </div>
+    <div class="field-group"><div id="keyMount"><span class="hint">The key manager is loading. If this stays, check your connection and reload.</span></div></div>
 
     <hr class="field-divider">
     <div class="field-section-label">Email via Google Apps Script</div>
@@ -332,7 +330,7 @@ function setDays(n) {
 
 // SETTINGS
 function openSettings() {
-  document.getElementById('apiKeyInput').value = localStorage.getItem('kt_api_key') || '';
+  if (window.AppKeys) window.AppKeys.mountSettings(document.getElementById('keyMount'));
   document.getElementById('gasUrlInput').value = localStorage.getItem('kt_gas_url') || '';
   document.getElementById('emailToInput').value = localStorage.getItem('kt_email_to') || '';
   document.getElementById('restrictionsInput').value = localStorage.getItem('kt_restrictions') || '';
@@ -342,11 +340,9 @@ function openSettings() {
 }
 function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
 function saveSettings() {
-  var key = document.getElementById('apiKeyInput').value.trim();
   var gasUrl = document.getElementById('gasUrlInput').value.trim();
   var emailTo = document.getElementById('emailToInput').value.trim();
   var rest = document.getElementById('restrictionsInput').value.trim();
-  if (key) { localStorage.setItem('kt_api_key', key); } else { localStorage.removeItem('kt_api_key'); }
   if (gasUrl) { localStorage.setItem('kt_gas_url', gasUrl); } else { localStorage.removeItem('kt_gas_url'); }
   if (emailTo) { localStorage.setItem('kt_email_to', emailTo); } else { localStorage.removeItem('kt_email_to'); }
   if (rest) { localStorage.setItem('kt_restrictions', rest); } else { localStorage.removeItem('kt_restrictions'); }
@@ -368,8 +364,8 @@ function mime(dataURL) { return dataURL.split(';')[0].split(':')[1]; }
 
 // GENERATE
 async function generatePlan() {
-  var apiKey = localStorage.getItem('kt_api_key');
-  if (!apiKey) { showError('Add your Claude API key in \u2699 Settings first.'); return; }
+  var apiKey = window.AppKeys ? await window.AppKeys.get() : null;
+  if (!apiKey) { showError('Add your Claude API key with the gear button to continue.'); return; }
   var totalImages = zones.fridge.length + zones.freezer.length + zones.pantry.length;
   if (!totalImages) { showError('Add at least one photo of your fridge, freezer, or pantry to continue.'); return; }
 
