@@ -147,7 +147,7 @@ Claude is reading the images — clearer, better-lit photos with less clutter yi
 
 Single-file vanilla HTML/CSS/JS. No frameworks, no build step, no external dependencies beyond the Claude API and your own GAS endpoint.
 
-- **AI:** Claude Sonnet (`claude-sonnet-4-20250514`) with vision input
+- **AI:** the current Claude Sonnet model with vision input
 - **Email:** Google Apps Script (`GmailApp.sendEmail`) — runs as your own Google account
 - **Fonts:** Playfair Display, DM Mono (Google Fonts)
 - **Storage:** `localStorage` only — nothing is stored on any server
